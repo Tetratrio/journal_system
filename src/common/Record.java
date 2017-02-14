@@ -44,6 +44,10 @@ public class Record {
     public String getData() {
         return data;
     }
+    
+    public String getEventLog() {
+    	return eventLog;
+    }
 
     public void changeData(String data) {
         this.data = data;

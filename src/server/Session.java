@@ -15,35 +15,28 @@ public class Session extends Thread {
         dbAccess = DatabaseAccess.getInstance();
     }
     public void run() {
-            InputStream is = null;
             ObjectInputStream ois = null;
 
-            OutputStream os = null;
             ObjectOutputStream oos = null;
 
         try {
-            is = socket.getInputStream();
-            ois = new ObjectInputStream(is);
+            ois = new ObjectInputStream(socket.getInputStream());
 
-            os = socket.getOutputStream();
-            oos = new ObjectOutputStream(os);
+            oos = new ObjectOutputStream(socket.getOutputStream());
         } catch (IOException ie) {
-            return; //Do something else here??
+            connectionError(ie);
+            return;
         }
 
         try {
             while (!this.isInterrupted()) {
-                byte[] request = new byte[1];
-
-                if (is.read(request) == -1) {
-                    return; //Or do something else?
-                }
+                byte request = ois.readByte();
 
                 int recordId = 0;
                 Record record = null;
                 Integer[] recordIdList = null;
 
-                switch (request[1]) {
+                switch (request) {
                     case Protocol.CREATE:
                         record = (Record) ois.readObject();
                         dbAccess.createRecord(token, record);
@@ -87,12 +80,14 @@ public class Session extends Thread {
                 }
             }
         } catch (IOException e) {
-            return;// Or do something here?
+            connectionError(e);
+            return;
         } catch (AccessDeniedException ae) {
             try {
                 oos.writeByte(Protocol.ACCESS_DENIED);
             } catch (IOException iie) {
-                return;// Or do something else?
+                connectionError(iie);
+                return;
             }
         } catch (ClassNotFoundException ce) {
             System.out.println("Class not found exception recieved");
@@ -101,5 +96,16 @@ public class Session extends Thread {
             System.out.println("Closing server...");
             System.exit(1);
         }
+    }
+
+    private void connectionError(Exception e) {
+        System.out.println("Server: Connection problem");
+        System.out.println(e.getMessage());
+        try {
+            socket.close();
+        } catch (Exception ee) {
+            //do nothing
+        }
+        return;
     }
 }
