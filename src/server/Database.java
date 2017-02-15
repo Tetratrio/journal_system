@@ -1,6 +1,9 @@
 package server;
 
 import common.*;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.*;
 
 /**
@@ -21,7 +24,7 @@ public class Database {
      */
     public Database(String path) {
         dbMap = new HashMap<Integer,Record>();
-        //TODO: Load data from path
+        loadData(path);
     }
 
     public synchronized Record getRecord(int recordId) {
@@ -92,4 +95,55 @@ public class Database {
 
         return (Integer[]) recordIdList.toArray();
     }
+    
+    private void loadData(String path) {
+    	BufferedReader br = null;
+    	try {
+    		br = new BufferedReader(new FileReader(path));
+    		while(true) {
+    			int recordId, patientId, divisionId, doctorId, nurseId;
+    			String data, eventLog;
+    			StringBuilder sb;
+    			String line = null;
+    			line = br.readLine();
+    			if (line == null) {
+    				br.close();
+    				return; // No more entries to read.
+    			}
+    			recordId = Integer.parseInt(line);
+    			patientId = Integer.parseInt(br.readLine());
+    			divisionId = Integer.parseInt(br.readLine());
+    			doctorId = Integer.parseInt(br.readLine());
+    			nurseId = Integer.parseInt(br.readLine());
+    			sb = new StringBuilder();
+    			line = null;
+    			while (!(line = br.readLine()).equals("%")) {
+    				sb.append(line + '\n');
+    			}
+    			data = sb.toString();
+    			sb = new StringBuilder();
+    			line = null;
+    			while (!(line = br.readLine()).equals("%")) {
+    				sb.append(line + '\n');
+    			}
+    			eventLog = sb.toString();
+    			if (eventLog.length() > 0) {
+    				eventLog = eventLog.substring(0, eventLog.length() - 1);
+    			}
+    			Record record = new Record(recordId, doctorId, nurseId, divisionId, patientId, data);
+    			record.recordEvent(eventLog);
+    			dbMap.put(recordId, record);
+    		}
+    	} catch (Exception e) {
+    		System.out.println("Error when reading data from fiel.");
+    		System.out.println(e.getMessage());
+    		System.out.println("Exiting...");
+    		System.exit(1);
+    	}
+    }
+
+    //Fill this method if saving of data between runs of server is needed.
+	public void save() {
+		//If we ever want our data to be saved between different startups.
+	}
 }

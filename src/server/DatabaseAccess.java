@@ -21,7 +21,7 @@ public class DatabaseAccess {
     }
 
     private DatabaseAccess() {
-        db = new Database("database.txt");
+        db = new Database("data/dummy_data");
     }
 
     public Integer[] getRecordIdFromPatientId(int patientId) {
@@ -105,5 +105,9 @@ public class DatabaseAccess {
         }
         db.deleteRecord(recordId);
     }
+
+	public void saveDatabase() {
+		db.save();
+	}
 
 }

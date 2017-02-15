@@ -32,7 +32,7 @@ public class Client {
         }
     }
 
-    public Record getRecord(int recordId) {
+    public Record getRecord(int recordId) throws AccessDeniedException {
         Record record = null;
         try {
             oos.writeByte(Protocol.READ);
@@ -48,7 +48,7 @@ public class Client {
         return record;
     }
 
-    public void setRecord(int recordId, String data) {
+    public void setRecord(int recordId, String data) throws AccessDeniedException {
         try {
             oos.writeByte(Protocol.WRITE);
             oos.writeInt(recordId);
@@ -62,7 +62,7 @@ public class Client {
         }
     }
 
-    public void deleteRecord(int recordId) {
+    public void deleteRecord(int recordId) throws AccessDeniedException {
         try {
             oos.writeByte(Protocol.DELETE);
             oos.writeInt(recordId);

@@ -11,6 +11,7 @@ public class Server implements Runnable {
         this.serverSocket = serverSocket;
     }
 
+    //Security stuff performed here before socket is sent to a new session for communication with client.
     public void run() {
         try {
             while (!Thread.interrupted()) {
@@ -44,16 +45,17 @@ public class Server implements Runnable {
         }
         new Thread(new Server(serverSocket)).start();
 
-        Thread hook = new Thread(new SocketCloser(serverSocket));
+        Thread hook = new Thread(new Closer(serverSocket));
         Runtime.getRuntime().addShutdownHook(hook);
     }
 
-    private static class SocketCloser implements Runnable {
+    private static class Closer implements Runnable {
         ServerSocket serverSocket;
-        public SocketCloser(ServerSocket serverSocket) {
+        public Closer(ServerSocket serverSocket) {
             this.serverSocket = serverSocket;
         }
         public void run() {
+        	DatabaseAccess.getInstance().saveDatabase();
             try {
                 serverSocket.close();
             } catch (IOException ie) {
