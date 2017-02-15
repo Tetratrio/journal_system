@@ -12,11 +12,6 @@ import javax.swing.border.TitledBorder;
 
 @SuppressWarnings("serial")
 public class GUI extends JFrame {
-	
-	//TEST GUI HERE
-	public static void main(String[] args) {
-		new GUI(null);
-	}
 
 	private Client client;
 	
