@@ -7,22 +7,40 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import client.ClientLogin;
+import common.AccessDeniedException;
+
+@SuppressWarnings("serial")
 public class ClientLoginGUI extends JFrame {
 	
+	public static void main(String[] args) {
+		new ClientLoginGUI(null);
+	}
+	
+	private ClientLogin clientLogin;
 	
 	private JTextField usernameTextfield;
 	private JPasswordField passwordTextfield;
 	
-	public ClientLoginGUI() {
+	public ClientLoginGUI(ClientLogin clientLogin) {
+		this.clientLogin = clientLogin;
 		createGuiWithDumpsterCode();
 	}
 	
 	private void login() {
-		
+		try {
+			clientLogin.login(usernameTextfield.getText(), new String(passwordTextfield.getPassword()));
+		} catch (AccessDeniedException ae) {
+			JOptionPane.showMessageDialog(this, "Username or password is incorrect.");
+		} catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Something went wrong, try again.");
+		}
+		this.dispose();
 	}
 	
 	private void exit() {
@@ -45,8 +63,6 @@ public class ClientLoginGUI extends JFrame {
 		JButton loginButton = new JButton("Login");
 		JButton exitButton = new JButton("Exit");
 		
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 		
 		loginButton.addActionListener(new ActionListener() {
 			@Override
@@ -61,5 +77,39 @@ public class ClientLoginGUI extends JFrame {
 				exit();
 			}
 		});
+		
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+		
+		buttonPanel.add(loginButton);
+		buttonPanel.add(exitButton);
+		
+		JPanel usernamePanel = new JPanel();
+		usernamePanel.setLayout(new BoxLayout(usernamePanel, BoxLayout.X_AXIS));
+		
+		JPanel passwordPanel = new JPanel();
+		passwordPanel.setLayout(new BoxLayout(passwordPanel, BoxLayout.X_AXIS));
+		
+		usernamePanel.add(usernameLabel);
+		passwordPanel.add(passwordLabel);
+		
+		mainPanel.add(usernamePanel);
+		mainPanel.add(usernameTextfield);
+		mainPanel.add(passwordPanel);
+		mainPanel.add(passwordTextfield);
+		mainPanel.add(buttonPanel);
+		
+		this.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+				System.exit(0);
+			}
+		});
+		
+		this.add(mainPanel);
+		this.pack();
+		this.setTitle("Journal System Login");
+		this.setSize(300, 140);
+		this.setVisible(true);
 	}
 }

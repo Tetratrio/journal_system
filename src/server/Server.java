@@ -26,14 +26,14 @@ public class Server implements Runnable {
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.out.println("Usage: Server Port");
+            System.out.println("Usage: Java -jar Server.jar [Port]");
             System.exit(1);
         }
         int port = 0;
         try {
             port = Integer.parseInt(args[0]);
         } catch (NumberFormatException e) {
-            System.out.println("Usage: Server Port");
+            System.out.println("Usage: Java -jar Server.jar [Port]");
             System.exit(1);
         }
         ServerSocket serverSocket = null;
