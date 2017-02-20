@@ -28,16 +28,11 @@ public class GUI extends JFrame {
 	private JTextField searchTextfield;
 	private DefaultListModel<String> searchResult;
 	private JList<String> searchList;
-	
-	public static void main(String[] args) {
-		new GUI(null);
-	}
-	
+
 	public GUI(Client client) {
 		this.client = client;
 		
-		createGuiWithDumpsterCode();
-		
+		createGuiWithDumpsterCode();	
 	}
 	
 	private void notifyUserOfAccessDenied() {

@@ -18,10 +18,6 @@ import common.AccessDeniedException;
 @SuppressWarnings("serial")
 public class ClientLoginGUI extends JFrame {
 	
-	public static void main(String[] args) {
-		new ClientLoginGUI(null);
-	}
-	
 	private ClientLogin clientLogin;
 	
 	private JTextField usernameTextfield;
@@ -37,8 +33,14 @@ public class ClientLoginGUI extends JFrame {
 			clientLogin.login(usernameTextfield.getText(), new String(passwordTextfield.getPassword()));
 		} catch (AccessDeniedException ae) {
 			JOptionPane.showMessageDialog(this, "Username or password is incorrect.");
+			usernameTextfield.setText("");
+			passwordTextfield.setText("");
+			return;
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Something went wrong, try again.");
+			usernameTextfield.setText("");
+			passwordTextfield.setText("");
+			return;
 		}
 		this.dispose();
 	}

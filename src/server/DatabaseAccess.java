@@ -1,5 +1,8 @@
 package server;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import common.*;
 
 /**
@@ -68,7 +71,7 @@ public class DatabaseAccess {
             }
         }
 
-        record.recordEvent(token.toString() + " : READ");
+        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : READ");
         return record;
     }
 
@@ -95,7 +98,7 @@ public class DatabaseAccess {
             throw new AccessDeniedException();
         }
 
-        record.recordEvent(token.toString() + " : WRITE");
+        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : WRITE");
         record.changeData(data);
     }
 
@@ -108,6 +111,10 @@ public class DatabaseAccess {
 
 	public void saveDatabase() {
 		db.save();
+	}
+	
+	private String getCurrentTimeStamp() {
+	    return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
 	}
 
 }
