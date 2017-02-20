@@ -2,6 +2,7 @@ package client.gui;
 
 import client.*;
 import common.AccessDeniedException;
+import common.Record;
 
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -9,6 +10,8 @@ import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
 @SuppressWarnings("serial")
 public class GUI extends JFrame {
@@ -25,6 +28,10 @@ public class GUI extends JFrame {
 	private JTextField searchTextfield;
 	private DefaultListModel<String> searchResult;
 	private JList<String> searchList;
+	
+	public static void main(String[] args) {
+		new GUI(null);
+	}
 	
 	public GUI(Client client) {
 		this.client = client;
@@ -82,12 +89,54 @@ public class GUI extends JFrame {
 	}
 	
 	
+	private void loadRecord(int recordId) {
+		Record record = null;
+		try {
+			record = client.getRecord(recordId);
+		} catch (AccessDeniedException ae) {
+			notifyUserOfAccessDenied();
+		} catch (Exception e) {
+			//never gonna get here? catch here to be safe anyway
+		}
+		journalText.setText(record.getData());
+		patientIdLabel.setText(Integer.toString(record.getPatientId()));
+		doctorIdLabel.setText(Integer.toString(record.getDoctorId()));
+		nurseIdLabel.setText(Integer.toString(record.getNurseId()));
+		divisionIdLabel.setText(Integer.toString(record.getDivisionId()));
+
+		eventLog.clear();
+		
+		String[] lines = record.getEventLog().split("\\r?\\n");
+		
+		for (String s : lines) {
+			eventLog.addElement(s);
+		}
+	}
 	
-	
-	
-	
-	
-	
+	private void deleteRecord() {
+		int index = searchList.getSelectedIndex();
+		if (index != -1 && index < searchResult.size()) {
+			try {
+				client.deleteRecord(Integer.parseInt(searchResult.getElementAt(index)));
+			} catch (AccessDeniedException ae) {
+				notifyUserOfAccessDenied();
+			} catch (Exception e) {
+				//never gonna get here? catch here to be safe anyway
+			}
+			journalText.setText("");
+			patientIdLabel.setText("");
+			doctorIdLabel.setText("");
+			nurseIdLabel.setText("");
+			divisionIdLabel.setText("");
+			
+			eventLog.clear();
+			
+			searchResult.remove(index);
+			
+			JOptionPane.showMessageDialog(this, "Successfully deleted record " + index + ".");
+		}
+		
+	}
 	
 	
 	/**
@@ -101,10 +150,10 @@ public class GUI extends JFrame {
 		listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
 
 		
-		JPanel savePanel, infoPanel, infoSavePanel, eventPanel, eventInfoPanel;
+		JPanel saveDeletePanel, infoPanel, infoSavePanel, eventPanel, eventInfoPanel;
 		
-		savePanel = new JPanel();
-		savePanel.setLayout(new BoxLayout(savePanel, BoxLayout.X_AXIS));
+		saveDeletePanel = new JPanel();
+		saveDeletePanel.setLayout(new BoxLayout(saveDeletePanel, BoxLayout.X_AXIS));
 		
 		infoPanel = new JPanel();
 		infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
@@ -128,7 +177,17 @@ public class GUI extends JFrame {
 			}	
 		});
 		
-		savePanel.add(saveChangesButton);
+		saveDeletePanel.add(saveChangesButton);
+		
+		JButton deleteRecordButton = new JButton("Delete");
+		deleteRecordButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				deleteRecord();
+			}	
+		});
+				
+		saveDeletePanel.add(deleteRecordButton);
 		
 		patientIdLabel = new JLabel("Patient ID: ");
 		doctorIdLabel = new JLabel("Doctor ID: ");
@@ -144,8 +203,9 @@ public class GUI extends JFrame {
 		infoPanel.add(divisionIdLabel);
 		infoPanel.add(new JLabel("                                                "));
 				
-		infoSavePanel.add(new JLabel("     "));
-		infoSavePanel.add(savePanel);
+		infoSavePanel.add(new JLabel(edge));
+		infoSavePanel.add(saveDeletePanel);
+		
 		JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
 		p.add(infoPanel);
 		infoSavePanel.add(p);
@@ -190,6 +250,19 @@ public class GUI extends JFrame {
 		searchList = new JList<String>(searchResult);
 		searchList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		JScrollPane searchScrollPane = new JScrollPane(searchList);
+		
+		searchList.addListSelectionListener(new ListSelectionListener() {
+
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				int index = searchList.getSelectedIndex();
+				if (index != -1 && index < searchResult.size()) {
+					loadRecord(Integer.parseInt(searchResult.getElementAt(index)));
+				}
+				
+			}
+			
+		});
 		
 		JButton createButton = new JButton("New Journal");
 		createButton.addActionListener(new ActionListener() {
@@ -239,6 +312,7 @@ public class GUI extends JFrame {
 		mainPanel.add(new JLabel(edge));
 		this.add(mainPanel);
 		this.pack();
+		this.setTitle("Journal System");
 		
 		this.setVisible(true);
 	}
