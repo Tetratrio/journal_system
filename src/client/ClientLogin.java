@@ -1,6 +1,10 @@
 package client;
 
-import javax.net.ssl.SSLSocket;
+import java.io.*;
+import java.security.KeyStore;
+import java.security.UnrecoverableKeyException;
+
+import javax.net.ssl.*;
 
 import client.gui.ClientLoginGUI;
 import client.gui.GUI;
@@ -8,6 +12,7 @@ import common.AccessDeniedException;
 
 //Security stuff performed here before socket is sent to an instance of Client for communication with the server.
 public class ClientLogin {
+	private static final String CLIENT_CERT_PATH = "data/certificates/client/";
 	private String address;
 	private int port;
 	
@@ -21,16 +26,70 @@ public class ClientLogin {
 	}
 
 	public void login(String username, String password) throws AccessDeniedException {
-		// Do login, throw new AccessDeniedException() if username/password incorrect
 		
-		//dummy code for error removal, remove this!
-		int i = 0;
-		if (i == 0) throw new AccessDeniedException();
-		//End of dummy code
+		if (!usernameExists(username)) {
+			throw new AccessDeniedException();
+		}
 		
-		SSLSocket socket = null;//Get the SSL socket
+		String keystore, truststore;
 		
+		keystore = CLIENT_CERT_PATH + username + "keystore";
+		truststore = CLIENT_CERT_PATH + username + "truststore";
+		
+		char[] passwordCharArray = password.toCharArray();
+		
+		SSLSocketFactory factory = null;
+		SSLSocket socket = null;
+		try {
+			KeyStore ks = KeyStore.getInstance("JKS");
+			KeyStore ts = KeyStore.getInstance("JKS");
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+			TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509");
+			SSLContext ctx = SSLContext.getInstance("TLS");
+			ks.load(new FileInputStream(keystore), passwordCharArray);
+			ts.load(new FileInputStream(truststore), passwordCharArray);
+			kmf.init(ks, passwordCharArray);
+			tmf.init(ts);
+			ctx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+			factory = ctx.getSocketFactory();
+			
+			socket = (SSLSocket)factory.createSocket(address, port);
+			socket.startHandshake(); //Is this needed?
+		} catch (IOException ie) {
+			if (ie.getCause() instanceof UnrecoverableKeyException) {
+				throw new AccessDeniedException();
+			} else {
+				System.out.println("Failed to connect to server.");
+	    		System.out.println("Error message: " + ie.getMessage());
+	    		System.out.println("Shutting down client...");
+	    		System.exit(1);
+			}
+		} catch (Exception e) {
+			System.out.println("Failed to connect to server.");
+    		System.out.println("Error message: " + e.getMessage());
+    		System.out.println("Shutting down client...");
+    		System.exit(1);
+		}
 		new GUI(new Client(socket));
+	}
+	
+	private boolean usernameExists(String username) {
+		if (!username.matches("[0-9]+") && !username.equals("-")) {
+			return false;
+		}
+		try {
+			File folder = new File("data/certificates/client");
+			File[] listOfFiles = folder.listFiles();
+			
+			for (int i = 0; i < listOfFiles.length; ++i) {
+				if (listOfFiles[i].getName().contains(username)) {
+					return true;
+				}
+			}
+		} catch (Exception e) {
+			
+		}
+		return false;
 	}
 	
 	public static void main(String[] args) {

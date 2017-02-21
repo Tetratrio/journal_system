@@ -1,0 +1,27 @@
+#!/bin/bash
+clear
+
+id=$1
+type=$2
+division=$3
+
+truststore=truststore 
+keystore=keystore 
+crs=.crs 
+crt=crt.pem
+
+#1. Creating a self-signed CA-certificate
+#openssl req -x509 -newkey rsa:2048 -keyout cakey.pem -out cacrt.pem
+#2. Creating a truststore for client and importing the CA-cert
+keytool -importcert -alias cacrt -file cacrt.pem -keystore $id$truststore -storepass password -keypass password
+#3. Creating a end-user keypair and store it in a new clientkeystore
+keytool -genkeypair -alias clientkey -keystore $id$keystore -dname "cn=$id, ou=$type, o=$division, c=SE" -storepass password -keypass password -validity 365
+#4. Creating a certificate signing request(CSR) for the client-keys
+keytool -certreq -file $id$crs -alias clientkey -keystore $id$keystore -storepass password -keypass password
+#5. Let the CA sign the request from client
+openssl x509 -req -in $id$crs -CA cacrt.pem -CAkey cakey.pem -out $id$crt -CAcreateserial -extfile v3.ext -passin pass:password
+#6. Import CA-certificate to clientkeystore
+keytool -importcert -file cacrt.pem -keystore $id$keystore -storepass password
+#7. Import the client-certificate that is signed by CA
+keytool -importcert -file $id$crt -keystore $id$keystore -alias clientkey -keypass password -storepass password
+

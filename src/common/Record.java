@@ -1,7 +1,11 @@
 package common;
 
-public class Record {
-    private int recordId;
+import java.io.Serializable;
+
+public class Record implements Serializable {
+	private static final long serialVersionUID = -890988839006318362L;
+	
+	private int recordId;
     private int doctorId;
     private int nurseId;
     private int divisionId;

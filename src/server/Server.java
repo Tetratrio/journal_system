@@ -1,25 +1,45 @@
 package server;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import javax.net.ssl.SSLSocket;
+import java.net.*;
+import javax.net.ServerSocketFactory;
+import javax.net.ssl.*;
 
 public class Server implements Runnable {
+	private static final String KEYSTORE = "data/certificates/server/serverkeystore";
+	private static final String TRUSTSTORE = "data/certificates/server/servertruststore";
+	private static final String PASSWORD = "password";
+	
     private ServerSocket serverSocket;
 
-    public Server(ServerSocket serverSocket) {
-        this.serverSocket = serverSocket;
+    public Server(int port) {
+    	try {
+    		ServerSocketFactory ssf = NetHelper.getServerSocketFactory(KEYSTORE, TRUSTSTORE, PASSWORD);
+            ServerSocket ss = ssf.createServerSocket(port);
+            ((SSLServerSocket)ss).setNeedClientAuth(true);
+            this.serverSocket = ss;
+    	} catch (Exception e) {
+    		System.out.println("Failed to start server.");
+    		System.out.println("Error message: " + e.getMessage());
+    		System.out.println("Shutting down server...");
+    		System.exit(1);
+    	}
+    	
     }
 
-    //Security stuff performed here before socket is sent to a new session for communication with client.
     public void run() {
+    	System.out.println("Server started, accepting incoming connections...");
         try {
             while (!Thread.interrupted()) {
                 SSLSocket socket = (SSLSocket) serverSocket.accept();
                 new Thread(new Session(socket)).start();
             }
-        } catch (IOException ie) {
-            return;//Do something else here?
+        } catch (Exception e) {
+        
+        }
+        try {
+        	serverSocket.close();
+        } catch (Exception e) {
+        	//whatever
         }
     }
 
@@ -36,31 +56,29 @@ public class Server implements Runnable {
             System.out.println("Usage: Java -jar Server.jar [Port]");
             System.exit(1);
         }
-        ServerSocket serverSocket = null;
-        try {
-            serverSocket = new ServerSocket(port);
-        } catch (Exception e) {
-            System.out.println("Failed to create server socket on port " + port);
-            System.exit(1);
-        }
-        new Thread(new Server(serverSocket)).start();
+        
+        Thread server = new Thread(new Server(port));
 
-        Thread hook = new Thread(new Closer(serverSocket));
+        Thread hook = new Thread(new Closer(server));
         Runtime.getRuntime().addShutdownHook(hook);
+        
+        server.start();
     }
 
     private static class Closer implements Runnable {
-        ServerSocket serverSocket;
-        public Closer(ServerSocket serverSocket) {
-            this.serverSocket = serverSocket;
+        Thread server;
+        public Closer(Thread server) {
+            this.server = server;
         }
         public void run() {
+        	System.out.println("Shutting down server and closing server socket...");
         	DatabaseAccess.getInstance().saveDatabase();
             try {
-                serverSocket.close();
-            } catch (IOException ie) {
+                server.interrupt();
+            } catch (Exception e) {
                 //whatever
             }
         }
     }
+    
 }

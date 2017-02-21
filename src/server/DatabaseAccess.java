@@ -24,7 +24,7 @@ public class DatabaseAccess {
     }
 
     private DatabaseAccess() {
-        db = new Database("data/dummy_data");
+        db = new Database("data/database/db_save_file");
     }
 
     public Integer[] getRecordIdFromPatientId(int patientId) {

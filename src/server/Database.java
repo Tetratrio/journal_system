@@ -54,7 +54,7 @@ public class Database {
             }
         }
 
-        return (Integer[]) recordIdList.toArray();
+        return toIntegerArray(recordIdList.toArray());
     }
 
 
@@ -67,7 +67,7 @@ public class Database {
             }
         }
 
-        return (Integer[]) recordIdList.toArray();
+        return toIntegerArray(recordIdList.toArray());
     }
 
 
@@ -80,7 +80,7 @@ public class Database {
             }
         }
 
-        return (Integer[]) recordIdList.toArray();
+        return toIntegerArray(recordIdList.toArray());
     }
 
 
@@ -93,7 +93,7 @@ public class Database {
             }
         }
 
-        return (Integer[]) recordIdList.toArray();
+        return toIntegerArray(recordIdList.toArray());
     }
     
     private void loadData(String path) {
@@ -140,6 +140,16 @@ public class Database {
     		System.out.println("Exiting...");
     		System.exit(1);
     	}
+    }
+    
+    private Integer[] toIntegerArray(Object[] oldArray) {
+    	Integer[] newArray = new Integer[oldArray.length];
+    	
+    	for (int i = 0; i < oldArray.length; ++i) {
+    		newArray[i] = (Integer) oldArray[i];
+    	}
+    	
+    	return newArray;
     }
 
     //Fill this method if saving of data between runs of server is needed.

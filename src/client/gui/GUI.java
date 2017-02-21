@@ -7,6 +7,8 @@ import common.Record;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -44,9 +46,12 @@ public class GUI extends JFrame {
 			client.setRecord(Integer.parseInt(searchResult.getElementAt(searchList.getSelectedIndex())), journalText.getText());
 		} catch (AccessDeniedException ae) {
 			notifyUserOfAccessDenied();
+			return;
 		} catch (Exception e) {
-			//do nothing
+			return;
 		}
+		loadRecord(Integer.parseInt(searchResult.getElementAt(searchList.getSelectedIndex())));
+		JOptionPane.showMessageDialog(this, "Successfully saved changes to journal " + searchResult.getElementAt(searchList.getSelectedIndex()));
 	}
 	
 	private void search() {
@@ -70,7 +75,7 @@ public class GUI extends JFrame {
 					break;
 			}
 			searchList.setSelectedIndex(-1);
-			searchList.removeAll();
+			searchResult.clear();
 			for (int i = 0; i < searchResultArray.length; ++i) {
 				searchResult.addElement(Integer.toString(searchResultArray[i]));
 			}
@@ -90,14 +95,15 @@ public class GUI extends JFrame {
 			record = client.getRecord(recordId);
 		} catch (AccessDeniedException ae) {
 			notifyUserOfAccessDenied();
+			return;
 		} catch (Exception e) {
 			//never gonna get here? catch here to be safe anyway
 		}
 		journalText.setText(record.getData());
-		patientIdLabel.setText(Integer.toString(record.getPatientId()));
-		doctorIdLabel.setText(Integer.toString(record.getDoctorId()));
-		nurseIdLabel.setText(Integer.toString(record.getNurseId()));
-		divisionIdLabel.setText(Integer.toString(record.getDivisionId()));
+		patientIdLabel.setText("Patient ID: " + Integer.toString(record.getPatientId()));
+		doctorIdLabel.setText("Doctor ID: " + Integer.toString(record.getDoctorId()));
+		nurseIdLabel.setText("Nurse ID: " + Integer.toString(record.getNurseId()));
+		divisionIdLabel.setText("Division ID: " + Integer.toString(record.getDivisionId()));
 
 		eventLog.clear();
 		
@@ -115,6 +121,7 @@ public class GUI extends JFrame {
 				client.deleteRecord(Integer.parseInt(searchResult.getElementAt(index)));
 			} catch (AccessDeniedException ae) {
 				notifyUserOfAccessDenied();
+				return;
 			} catch (Exception e) {
 				//never gonna get here? catch here to be safe anyway
 			}
@@ -232,6 +239,26 @@ public class GUI extends JFrame {
 		searchSelect = new JComboBox<String>(searchStrings);
 		
 		searchTextfield = new JTextField();
+		
+		searchTextfield.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+				
+			}
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+					search();
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				
+			}
+			
+		});
 				
 		JButton searchButton = new JButton("Search");
 		searchButton.addActionListener(new ActionListener() {
@@ -247,12 +274,16 @@ public class GUI extends JFrame {
 		JScrollPane searchScrollPane = new JScrollPane(searchList);
 		
 		searchList.addListSelectionListener(new ListSelectionListener() {
-
+			private int lastLoad = 0;
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				int index = searchList.getSelectedIndex();
 				if (index != -1 && index < searchResult.size()) {
-					loadRecord(Integer.parseInt(searchResult.getElementAt(index)));
+					int newLoad = Integer.parseInt(searchResult.getElementAt(index));
+					if (newLoad != lastLoad) {
+						lastLoad = newLoad;
+						loadRecord(newLoad);
+					}
 				}
 				
 			}
