@@ -47,64 +47,82 @@ public class DatabaseAccess {
         if (token.getRole() != IdentificationToken.DOCTOR || token.getId() != record.getDoctorId()) {
             throw new AccessDeniedException();
         }
+        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : CREATE - ACCESS GRANTED");
         db.addRecord(record);
     }
 
     public Record readRecord(IdentificationToken token, int recordId) throws AccessDeniedException {
         Record record = db.getRecord(recordId);
+        boolean access = true;
 
         if (token.getRole() == IdentificationToken.PATIENT) {
             if (token.getId() != record.getPatientId()) {
-                throw new AccessDeniedException();
+                access = false;
             }
         }
 
         if (token.getRole() == IdentificationToken.DOCTOR) {
             if (token.getId() != record.getDoctorId() && token.getDivisionId() != record.getDivisionId()) {
-                throw new AccessDeniedException();
+                access = false;
             }
         }
 
         if (token.getRole() == IdentificationToken.NURSE) {
             if (token.getId() != record.getNurseId() && token.getDivisionId() != record.getDivisionId()) {
-                throw new AccessDeniedException();
+                access = false;
             }
         }
+        
+        if (!access) {
+        	record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : READ - ACCESS DENIED");
+        	throw new AccessDeniedException();
+        }
 
-        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : READ");
+        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : READ - ACCESS GRANTED");
         return record;
     }
 
     public void writeRecord(IdentificationToken token, int recordId, String data) throws AccessDeniedException {
         Record record = db.getRecord(recordId);
+        boolean access = true;
+        
+        if (!data.contains(record.getData())) {
+        	access = false;
+        }
 
         if (token.getRole() == IdentificationToken.PATIENT) {
-            throw new AccessDeniedException();
+            access = false;
         }
 
         if (token.getRole() == IdentificationToken.DOCTOR) {
             if (token.getId() != record.getDoctorId()) {
-                throw new AccessDeniedException();
+                access = false;
             }
         }
 
         if (token.getRole() == IdentificationToken.NURSE) {
             if (token.getId() != record.getNurseId()) {
-                throw new AccessDeniedException();
+                access = false;
             }
         }
 
         if (token.getRole() == IdentificationToken.GOVERNMENT) {
-            throw new AccessDeniedException();
+            access = false;
+        }
+        
+        if (!access) {
+        	record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : WRITE - ACCESS DENIED");
+        	throw new AccessDeniedException();
         }
 
-        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : WRITE");
+        record.recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : WRITE - ACCESS GRANTED");
         record.changeData(data);
     }
 
     public void deleteRecord(IdentificationToken token, int recordId) throws AccessDeniedException {
         if (token.getRole() != IdentificationToken.GOVERNMENT) {
-            throw new AccessDeniedException();
+        	db.getRecord(recordId).recordEvent("[" + getCurrentTimeStamp() + "] " + token.toString() + " : DELETE - ACCESS DENIED");
+        	throw new AccessDeniedException();
         }
         db.deleteRecord(recordId);
     }

@@ -32,9 +32,9 @@ public class Database {
     }
 
     public synchronized void addRecord(Record record) {
-        int recordId = (int) Math.random()*100000;
+        int recordId = (int) (Math.random()*10000);
         while (dbMap.containsKey(recordId)) {
-            recordId = (int) Math.random()*100000;
+            recordId = (int) (Math.random()*10000);
         }
 
         record = new Record(recordId, record.getDoctorId(), record.getNurseId(), record.getDivisionId(), record.getPatientId(), record.getData());

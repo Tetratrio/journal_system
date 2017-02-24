@@ -37,7 +37,7 @@ public class NewRecordGui extends JFrame {
 			client.createRecord(record);
 		} catch (AccessDeniedException ae) {
 			JOptionPane.showMessageDialog(this, "Access Denied");
-			cancel();
+			return;
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(this, "Failed to create a new record, make sure ID fields only contain numbers.");
 			return;

@@ -35,16 +35,17 @@ public class IdentificationToken {
         	} else if (roleString.equals("government")) {
         		this.role = GOVERNMENT;
         	}
-        	        	
-        	this.id = Integer.parseInt(idString);
+
         	
         	if (this.role != GOVERNMENT) {
+            	this.id = Integer.parseInt(idString);
         		this.division = Integer.parseInt(divisionString);
         	}
         	
     	} catch (Exception e) {
     		System.out.println("Failed getting client certificate information.");
     		System.out.println("Error message: " + e.getMessage());
+    		e.printStackTrace();
     		System.out.println("Shutting down server...");
     		System.exit(1);
     	}

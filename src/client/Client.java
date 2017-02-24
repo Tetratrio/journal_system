@@ -28,6 +28,8 @@ public class Client {
 			if (result == Protocol.ACCESS_DENIED) {
 				throw new AccessDeniedException();
 			}
+		} catch (AccessDeniedException ae) {
+			throw ae;
 		} catch (Exception e) {
 			connectionError(e);
 		}
